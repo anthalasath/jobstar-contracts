@@ -1,0 +1,1 @@
+Contracts for the jobstar dapp for the lfgrow hackaton.
