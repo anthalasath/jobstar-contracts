@@ -28,7 +28,7 @@ describe("JobStar", () => {
         expect(issuerSkills.length).to.eq(0);
     });
 
-    it("Updates the skills when ot having any skills yet and calling updateSkills for an owned profile", async () => {
+    it("Updates the skills when ot having any skills yet and calling updateSkills for a profile owned by the caller", async () => {
         const { jobStar, profileNft } = await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
@@ -49,5 +49,20 @@ describe("JobStar", () => {
 
         expect(workerSkills).to.deep.eq(expectedWorkerSkills);
         expect(issuerSkills.length).to.eq(0);
+    });
+
+    it("reverts when calling updateSkills for an profile not owned by the caller", async () => {
+        const { jobStar, profileNft } = await deployJobStar();
+        const accounts = await ethers.getSigners();
+        const worker = accounts[0];
+        const issuer = accounts[1];
+        const profileNftWithWorkerSigner = profileNft.connect(worker);
+        const profileNftWithIssuerSigner = profileNft.connect(issuer);
+        await waitForTx(profileNftWithWorkerSigner.mint());
+        await waitForTx(profileNftWithIssuerSigner.mint());
+        const issuerProfileId = 2;
+        const jobStarWithWorkerSigner = jobStar.connect(worker);
+
+        await expect(jobStarWithWorkerSigner.updateSkills(issuerProfileId, ["Javascript", "Solidity"])).to.be.revertedWith(`NotOwnerOfProfile(${issuerProfileId})`);
     });
 })
