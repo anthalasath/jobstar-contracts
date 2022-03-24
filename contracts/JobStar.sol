@@ -60,6 +60,10 @@ contract JobStar {
         profileNftContract = IERC721(_profileNftContract);
     }
 
+    function getProfileNftAddress() public view returns(address) {
+        return address(profileNftContract);
+    }
+
     function getSkills(uint256 profileId)
         public
         view
