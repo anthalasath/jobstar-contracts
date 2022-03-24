@@ -4,7 +4,7 @@ import { BigNumberish, Contract } from "ethers";
 import { ethers } from "hardhat";
 import { waitForTx } from "./utils";
 
-interface DeployJobStarResult {
+export interface DeployJobStarResult {
     jobStar: Contract
     profileNft: Contract
 }
