@@ -82,7 +82,11 @@ contract JobStar {
         emit SkillsUpdated(msg.sender, profileId, oldSkills, skills);
     }
 
-    function getAchievementIndex(uint256 achievementId) public pure returns(uint256) {
+    function getAchievementIndex(uint256 achievementId)
+        public
+        pure
+        returns (uint256)
+    {
         return achievementId - 1;
     }
 
@@ -119,7 +123,9 @@ contract JobStar {
             revert NotOwnerOfProfile(content.issuerProfileId);
         }
         uint256 achievementId = mintAchievement(content);
-        pendingAchievementsByProfileId[content.workerProfileId].push(achievementId);
+        pendingAchievementsByProfileId[content.workerProfileId].push(
+            achievementId
+        );
         emit AchievementProposed(
             content.issuerProfileId,
             content.workerProfileId,
@@ -128,15 +134,16 @@ contract JobStar {
     }
 
     function acceptAchievement(uint256 achievementId) public {
-        Achievement storage achievement = achievementsByIdMinusOne[getAchievementIndex(achievementId)];
+        uint256 index = getAchievementIndex(achievementId);
+        if (index >= achievementsByIdMinusOne.length) {
+            revert InexistentAchievement(achievementId);
+        }
+        Achievement storage achievement = achievementsByIdMinusOne[index];
         if (
-            profileNftContract.ownerOf(
-                achievement.content.workerProfileId
-            ) != msg.sender
+            profileNftContract.ownerOf(achievement.content.workerProfileId) !=
+            msg.sender
         ) {
-            revert NotOwnerOfProfile(
-                achievement.content.workerProfileId
-            );
+            revert NotOwnerOfProfile(achievement.content.workerProfileId);
         }
         if (achievement.isAccepted) {
             revert AchievementAlreadyAccepted(achievementId);

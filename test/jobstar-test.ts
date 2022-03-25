@@ -137,4 +137,20 @@ describe("JobStar", () => {
         expect(content[5]).to.eq(expectedContent.imageUri);
         expect(achievement[1]).to.eq(false);
     });
+
+    it("reverts when trying to accept an achievement that does not exist", async () => {
+        const { jobStar, profileNft } = await deployJobStar();
+        const accounts = await ethers.getSigners();
+        const worker = accounts[0];
+        const issuer = accounts[1];
+        const profileNftWithWorkerSigner = profileNft.connect(worker);
+        const profileNftWithIssuerSigner = profileNft.connect(issuer);
+        await waitForTx(profileNftWithWorkerSigner.mint());
+        await waitForTx(profileNftWithIssuerSigner.mint());
+        const workerProfileId = 1;
+        const issuerProfileId = 2;
+        const jobStarWithWorkerSigner = jobStar.connect(issuer);
+
+        await expect(jobStarWithWorkerSigner.acceptAchievement(1)).to.be.revertedWith(`InexistentAchievement(1)`);
+    });
 })
