@@ -19,10 +19,11 @@ struct AchievementContent {
 }
 
 contract JobStar {
-    mapping(uint256 => mapping(string => Achievement[]))
+    mapping(uint256 => mapping(string => uint256[]))
         public profileSkillsAndAchievements;
     mapping(uint256 => string[]) public profileSkills;
-    Achievement[] public achievementsById;
+    // Id starts at 1, 0 is used as missing value
+    Achievement[] achievementsByIdMinusOne;
     mapping(uint256 => uint256[]) public pendingAchievementsByProfileId;
     uint256 latestAchievementId;
 
@@ -60,7 +61,7 @@ contract JobStar {
         profileNftContract = IERC721(_profileNftContract);
     }
 
-    function getProfileNftAddress() public view returns(address) {
+    function getProfileNftAddress() public view returns (address) {
         return address(profileNftContract);
     }
 
@@ -81,6 +82,22 @@ contract JobStar {
         emit SkillsUpdated(msg.sender, profileId, oldSkills, skills);
     }
 
+    function getAchievementIndex(uint256 achievementId) public pure returns(uint256) {
+        return achievementId - 1;
+    }
+
+    function getAchievementById(uint256 id)
+        public
+        view
+        returns (Achievement memory)
+    {
+        uint256 index = getAchievementIndex(id);
+        if (index >= achievementsByIdMinusOne.length) {
+            revert InexistentAchievement(id);
+        }
+        return achievementsByIdMinusOne[index];
+    }
+
     function getPendingAchievementsCount(uint256 profileId)
         public
         view
@@ -97,13 +114,12 @@ contract JobStar {
         return profileSkillsAndAchievements[profileId][skill].length;
     }
 
-    function proposeAchievement(
-        AchievementContent memory content
-    ) public {
+    function proposeAchievement(AchievementContent memory content) public {
         if (profileNftContract.ownerOf(content.issuerProfileId) != msg.sender) {
             revert NotOwnerOfProfile(content.issuerProfileId);
         }
         uint256 achievementId = mintAchievement(content);
+        pendingAchievementsByProfileId[content.workerProfileId].push(achievementId);
         emit AchievementProposed(
             content.issuerProfileId,
             content.workerProfileId,
@@ -112,26 +128,24 @@ contract JobStar {
     }
 
     function acceptAchievement(uint256 achievementId) public {
-        if (achievementId >= achievementsById.length) {
-            revert InexistentAchievement(achievementId);
-        }
+        Achievement storage achievement = achievementsByIdMinusOne[getAchievementIndex(achievementId)];
         if (
             profileNftContract.ownerOf(
-                achievementsById[achievementId].content.workerProfileId
+                achievement.content.workerProfileId
             ) != msg.sender
         ) {
             revert NotOwnerOfProfile(
-                achievementsById[achievementId].content.workerProfileId
+                achievement.content.workerProfileId
             );
         }
-        if (achievementsById[achievementId].isAccepted) {
+        if (achievement.isAccepted) {
             revert AchievementAlreadyAccepted(achievementId);
         }
 
-        achievementsById[achievementId].isAccepted = true;
+        achievement.isAccepted = true;
         emit AchievementAccepted(
-            achievementsById[achievementId].content.issuerProfileId,
-            achievementsById[achievementId].content.workerProfileId,
+            achievement.content.issuerProfileId,
+            achievement.content.workerProfileId,
             achievementId
         );
     }
@@ -141,10 +155,9 @@ contract JobStar {
         returns (uint256)
     {
         latestAchievementId++;
-        achievementsById[latestAchievementId] = Achievement({
-            content: content,
-            isAccepted: false
-        });
+        achievementsByIdMinusOne.push(
+            Achievement({content: content, isAccepted: false})
+        );
         return latestAchievementId;
     }
 }

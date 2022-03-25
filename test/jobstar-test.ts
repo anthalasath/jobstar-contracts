@@ -96,4 +96,45 @@ describe("JobStar", () => {
 
         await expect(jobStarWithWorkerSigner.proposeAchievement(achievementContent)).to.be.revertedWith(`NotOwnerOfProfile(${issuerProfileId})`);
     });
+
+    it("mints the achievement when calling proposeAchievement from a profile id that is owned by the sender and emits the AchievementProposed event with the right argumgents", async () => {
+        const { jobStar, profileNft } = await deployJobStar();
+        const accounts = await ethers.getSigners();
+        const worker = accounts[0];
+        const issuer = accounts[1];
+        const profileNftWithWorkerSigner = profileNft.connect(worker);
+        const profileNftWithIssuerSigner = profileNft.connect(issuer);
+        await waitForTx(profileNftWithWorkerSigner.mint());
+        await waitForTx(profileNftWithIssuerSigner.mint());
+        const workerProfileId = 1;
+        const issuerProfileId = 2;
+        const jobStarWithIssuerSigner = jobStar.connect(issuer);
+
+        const expectedContent = {
+            issuerProfileId,
+            workerProfileId,
+            title: "best title",
+            description: "best description",
+            dateOfDelivery: Date.now(),
+            imageUri: "https://ethereum.org/en/"
+        };
+
+        const tx = await jobStarWithIssuerSigner.proposeAchievement(expectedContent);
+        const receipt = await tx.wait();
+
+        const expectedAchievementId = 1;
+        const achievementProposedEvent = getEvent(receipt.events, "AchievementProposed");
+        expect(achievementProposedEvent.args.achievementId).to.eq(expectedAchievementId);
+        expect(achievementProposedEvent.args.issuerProfileId).to.eq(issuerProfileId);
+        expect(achievementProposedEvent.args.workerProfileId).to.eq(workerProfileId);
+        const achievement = await jobStar.getAchievementById(expectedAchievementId);
+        const content = achievement[0];
+        expect(content[0]).to.eq(expectedContent.issuerProfileId);
+        expect(content[1]).to.eq(expectedContent.workerProfileId);
+        expect(content[2]).to.eq(expectedContent.title);
+        expect(content[3]).to.eq(expectedContent.description);
+        expect(content[4]).to.eq(expectedContent.dateOfDelivery);
+        expect(content[5]).to.eq(expectedContent.imageUri);
+        expect(achievement[1]).to.eq(false);
+    });
 })
