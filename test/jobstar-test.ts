@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployJobStar, DeployJobStarResult } from "../scripts/deploy";
-import { waitForTx } from "../scripts/utils";
+import { getEvent, waitForTx } from "../scripts/utils";
 
 describe("JobStar", () => {
 
@@ -28,7 +28,7 @@ describe("JobStar", () => {
         expect(issuerSkills.length).to.eq(0);
     });
 
-    it("Updates the skills when ot having any skills yet and calling updateSkills for a profile owned by the caller", async () => {
+    it("Updates the skills when ot having any skills yet and calling updateSkills for a profile owned by the caller and emits a SkillsUpdated event with the correct arguments", async () => {
         const { jobStar, profileNft } = await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
@@ -42,13 +42,19 @@ describe("JobStar", () => {
         const jobStarWithWorkerSigner = jobStar.connect(worker);
         const expectedWorkerSkills = ["Javascript", "Solidity"];
 
-        await waitForTx(jobStarWithWorkerSigner.updateSkills(workerProfileId, expectedWorkerSkills));
+        const tx = await jobStarWithWorkerSigner.updateSkills(workerProfileId, expectedWorkerSkills);
+        const receipt = await tx.wait();
 
         const workerSkills = await jobStar.getSkills(workerProfileId);
         const issuerSkills = await jobStar.getSkills(issuerProfileId);
+        const skillsUpdatedEvent = getEvent(receipt.events, "SkillsUpdated");
 
         expect(workerSkills).to.deep.eq(expectedWorkerSkills);
         expect(issuerSkills.length).to.eq(0);
+        expect(skillsUpdatedEvent.args.owner).to.eq(worker.address);
+        expect(skillsUpdatedEvent.args.profileId).to.eq(workerProfileId);
+        expect(skillsUpdatedEvent.args.oldSkills).to.deep.eq([]);
+        expect(skillsUpdatedEvent.args.newSkills).to.deep.eq(expectedWorkerSkills);
     });
 
     it("reverts when calling updateSkills for an profile not owned by the caller", async () => {
