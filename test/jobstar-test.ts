@@ -71,4 +71,29 @@ describe("JobStar", () => {
 
         await expect(jobStarWithWorkerSigner.updateSkills(issuerProfileId, ["Javascript", "Solidity"])).to.be.revertedWith(`NotOwnerOfProfile(${issuerProfileId})`);
     });
+
+    it("reverts when calling proposeAchievement from a profile id that is not owned by the sender", async () => {
+        const { jobStar, profileNft } = await deployJobStar();
+        const accounts = await ethers.getSigners();
+        const worker = accounts[0];
+        const issuer = accounts[1];
+        const profileNftWithWorkerSigner = profileNft.connect(worker);
+        const profileNftWithIssuerSigner = profileNft.connect(issuer);
+        await waitForTx(profileNftWithWorkerSigner.mint());
+        await waitForTx(profileNftWithIssuerSigner.mint());
+        const workerProfileId = 1;
+        const issuerProfileId = 2;
+        const jobStarWithWorkerSigner = jobStar.connect(worker);
+
+        const achievementContent = {
+            issuerProfileId,
+            workerProfileId,
+            title: "best title",
+            description: "best description",
+            dateOfDelivery: Date.now(),
+            imageUri: ""
+        };
+
+        await expect(jobStarWithWorkerSigner.proposeAchievement(achievementContent)).to.be.revertedWith(`NotOwnerOfProfile(${issuerProfileId})`);
+    });
 })

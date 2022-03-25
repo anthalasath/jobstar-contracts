@@ -98,17 +98,15 @@ contract JobStar {
     }
 
     function proposeAchievement(
-        uint256 issuerProfileId,
-        uint256 workerProfileId,
         AchievementContent memory content
     ) public {
-        if (profileNftContract.ownerOf(issuerProfileId) != msg.sender) {
-            revert NotOwnerOfProfile(issuerProfileId);
+        if (profileNftContract.ownerOf(content.issuerProfileId) != msg.sender) {
+            revert NotOwnerOfProfile(content.issuerProfileId);
         }
         uint256 achievementId = mintAchievement(content);
         emit AchievementProposed(
-            issuerProfileId,
-            workerProfileId,
+            content.issuerProfileId,
+            content.workerProfileId,
             achievementId
         );
     }
