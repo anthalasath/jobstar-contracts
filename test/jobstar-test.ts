@@ -147,10 +147,33 @@ describe("JobStar", () => {
         const profileNftWithIssuerSigner = profileNft.connect(issuer);
         await waitForTx(profileNftWithWorkerSigner.mint());
         await waitForTx(profileNftWithIssuerSigner.mint());
-        const workerProfileId = 1;
-        const issuerProfileId = 2;
-        const jobStarWithWorkerSigner = jobStar.connect(issuer);
+        const jobStarWithWorkerSigner = jobStar.connect(worker);
 
         await expect(jobStarWithWorkerSigner.acceptAchievement(1)).to.be.revertedWith(`InexistentAchievement(1)`);
     });
-})
+    
+    it("reverts when trying to accept an achievement for a profile that the sender does not own", async () => {
+        const { jobStar, profileNft } = await deployJobStar();
+        const accounts = await ethers.getSigners();
+        const worker = accounts[0];
+        const issuer = accounts[1];
+        const profileNftWithWorkerSigner = profileNft.connect(worker);
+        const profileNftWithIssuerSigner = profileNft.connect(issuer);
+        await waitForTx(profileNftWithWorkerSigner.mint());
+        await waitForTx(profileNftWithIssuerSigner.mint());
+        const issuerProfileId = 2;
+        const jobStarWithWorkerSigner = jobStar.connect(worker);
+        const jobStarWithIssuerSigner = jobStar.connect(issuer);
+        const content = {
+            issuerProfileId,
+            workerProfileId: issuerProfileId,
+            title: "best title",
+            description: "best description",
+            dateOfDelivery: Date.now(),
+            imageUri: "https://ethereum.org/en/"
+        };
+        await waitForTx(jobStarWithIssuerSigner.proposeAchievement(content));
+
+        await expect(jobStarWithWorkerSigner.acceptAchievement(1)).to.be.revertedWith(`NotOwnerOfProfile(${issuerProfileId})`);
+    });
+})  
