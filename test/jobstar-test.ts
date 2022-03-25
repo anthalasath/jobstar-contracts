@@ -97,7 +97,7 @@ describe("JobStar", () => {
         await expect(jobStarWithWorkerSigner.proposeAchievement(achievementContent)).to.be.revertedWith(`NotOwnerOfProfile(${issuerProfileId})`);
     });
 
-    it("mints the achievement when calling proposeAchievement from a profile id that is owned by the sender and emits the AchievementProposed event with the right argumgents", async () => {
+    it("mints the achievement when calling proposeAchievement from a profile id that is owned by the sender and emits the AchievementProposed event with the right arguments", async () => {
         const { jobStar, profileNft } = await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
