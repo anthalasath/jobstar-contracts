@@ -1,4 +1,4 @@
-import { ContractTransaction } from "ethers";
+import { BigNumber, BigNumberish, ContractTransaction } from "ethers";
 
 export async function waitForTx(tx: Promise<ContractTransaction>) {
   await (await tx).wait();
@@ -14,4 +14,19 @@ export function getEvent(events: any[], eventName: string): any | null {
   } else {
     return null;
   }
+}
+
+export interface AchievementContent {
+  issuerProfileId: BigNumberish;
+  workerProfileId: BigNumberish;
+  title: string;
+  description: string;
+  dateOfDelivery: number;
+  imageUri: string;
+  skill: string;
+}
+
+export interface AccountPair<T> {
+    worker: T
+    issuer: T
 }
