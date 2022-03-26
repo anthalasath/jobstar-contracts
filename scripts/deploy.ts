@@ -6,7 +6,7 @@ import { waitForTx } from "./utils";
 
 export interface DeployJobStarResult {
     jobStar: Contract
-    profileNft: Contract
+    mockLensHub: Contract
 }
 
 export async function deployJobStar(): Promise<DeployJobStarResult> {
@@ -18,11 +18,11 @@ export async function deployJobStar(): Promise<DeployJobStarResult> {
     const jobStar = await JobStar.deploy(mockLensHub.address);
     await jobStar.deployed();
 
-    return { jobStar, profileNft: mockLensHub };
+    return { jobStar, mockLensHub };
 }
 
 async function main(): Promise<void> {
-    const {jobStar, profileNft } = await deployJobStar();
+    const { jobStar } = await deployJobStar();
     console.log(`JobStar deployed at ${jobStar.address}`);
 }
 

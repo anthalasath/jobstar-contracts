@@ -4,14 +4,14 @@ import { ethers } from "hardhat";
 import { deployJobStar, DeployJobStarResult } from "../scripts/deploy";
 import { AccountPair, AchievementContent, getEvent, waitForTx } from "../scripts/utils";
 
-async function mintProfile(lensHubWithSigner: Contract, handle: string): Promise<void> {
-    const tx = await lensHubWithSigner.mint(handle, "");
+async function mintProfile(mockLensHubWithSigner: Contract, handle: string): Promise<void> {
+    const tx = await mockLensHubWithSigner.mint(handle, "");
     await tx.wait();
 }
 
-async function mintProfiles(lensHubWithSigners: AccountPair<Contract>): Promise<AccountPair<number>> {
-    await mintProfile(lensHubWithSigners.worker, "worker");
-    await mintProfile(lensHubWithSigners.issuer, "issuer");
+async function mintProfiles(mockLensHubWithSigners: AccountPair<Contract>): Promise<AccountPair<number>> {
+    await mintProfile(mockLensHubWithSigners.worker, "worker");
+    await mintProfile(mockLensHubWithSigners.issuer, "issuer");
     return { worker: 1, issuer: 2 }
 }
 
@@ -19,17 +19,17 @@ async function mintProfiles(lensHubWithSigners: AccountPair<Contract>): Promise<
 describe("JobStar", () => {
 
     it("Starts with no skills for profiles", async () => {
-        const { jobStar, profileNft } = await deployJobStar();
+        const { jobStar, mockLensHub }= await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
         const issuer = accounts[1];
-        const profileNftWithWorkerSigner = profileNft.connect(worker);
-        const profileNftWithIssuerSigner = profileNft.connect(issuer);
-        const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+        const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+        const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+        const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
         // sanity checks
-        expect((await profileNft.ownerOf(profileIds.worker))).to.eq(worker.address);
-        expect((await profileNft.ownerOf(profileIds.issuer))).to.eq(issuer.address);
+        expect((await mockLensHub.ownerOf(profileIds.worker))).to.eq(worker.address);
+        expect((await mockLensHub.ownerOf(profileIds.issuer))).to.eq(issuer.address);
 
         const workerSkills = await jobStar.getSkills(profileIds.worker);
         const issuerSkills = await jobStar.getSkills(profileIds.issuer);
@@ -39,13 +39,13 @@ describe("JobStar", () => {
     });
 
     it("Updates the skills when ot having any skills yet and calling updateSkills for a profile owned by the caller and emits a SkillsUpdated event with the correct arguments", async () => {
-        const { jobStar, profileNft } = await deployJobStar();
+        const { jobStar, mockLensHub }= await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
         const issuer = accounts[1];
-        const profileNftWithWorkerSigner = profileNft.connect(worker);
-        const profileNftWithIssuerSigner = profileNft.connect(issuer);
-        const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+        const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+        const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+        const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
         const jobStarWithWorkerSigner = jobStar.connect(worker);
         const expectedWorkerSkills = ["Javascript", "Solidity"];
@@ -66,13 +66,13 @@ describe("JobStar", () => {
     });
 
     it("reverts when calling updateSkills for an profile not owned by the caller", async () => {
-        const { jobStar, profileNft } = await deployJobStar();
+        const { jobStar, mockLensHub }= await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
         const issuer = accounts[1];
-        const profileNftWithWorkerSigner = profileNft.connect(worker);
-        const profileNftWithIssuerSigner = profileNft.connect(issuer);
-        const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+        const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+        const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+        const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
         const jobStarWithWorkerSigner = jobStar.connect(worker);
 
@@ -80,13 +80,13 @@ describe("JobStar", () => {
     });
 
     it("reverts when calling proposeAchievement from a profile id that is not owned by the sender", async () => {
-        const { jobStar, profileNft } = await deployJobStar();
+        const { jobStar, mockLensHub }= await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
         const issuer = accounts[1];
-        const profileNftWithWorkerSigner = profileNft.connect(worker);
-        const profileNftWithIssuerSigner = profileNft.connect(issuer);
-        const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+        const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+        const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+        const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
         const jobStarWithWorkerSigner = jobStar.connect(worker);
 
@@ -104,13 +104,13 @@ describe("JobStar", () => {
     });
 
     it("mints the non-accepted achievement when calling proposeAchievement from a profile id that is owned by the sender and emits the AchievementProposed event with the right arguments", async () => {
-        const { jobStar, profileNft } = await deployJobStar();
+        const { jobStar, mockLensHub }= await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
         const issuer = accounts[1];
-        const profileNftWithWorkerSigner = profileNft.connect(worker);
-        const profileNftWithIssuerSigner = profileNft.connect(issuer);
-        const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+        const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+        const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+        const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
         const jobStarWithIssuerSigner = jobStar.connect(issuer);
 
@@ -145,13 +145,13 @@ describe("JobStar", () => {
 
     [0, 1, 2].forEach(expectedPendingAchievements => {
         it(`[${expectedPendingAchievements}] getPendingAchievementsCount returns the number of pending achievements for a skill`, async () => {
-            const { jobStar, profileNft } = await deployJobStar();
+            const { jobStar, mockLensHub }= await deployJobStar();
             const accounts = await ethers.getSigners();
             const worker = accounts[0];
             const issuer = accounts[1];
-            const profileNftWithWorkerSigner = profileNft.connect(worker);
-            const profileNftWithIssuerSigner = profileNft.connect(issuer);
-            const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+            const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+            const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+            const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
             const jobStarWithIssuerSigner = jobStar.connect(issuer);
 
@@ -175,13 +175,13 @@ describe("JobStar", () => {
 
 
     it("reverts when trying to accept an achievement that does not exist", async () => {
-        const { jobStar, profileNft } = await deployJobStar();
+        const { jobStar, mockLensHub }= await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
         const issuer = accounts[1];
-        const profileNftWithWorkerSigner = profileNft.connect(worker);
-        const profileNftWithIssuerSigner = profileNft.connect(issuer);
-        const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+        const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+        const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+        const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
         const jobStarWithWorkerSigner = jobStar.connect(worker);
 
@@ -189,15 +189,14 @@ describe("JobStar", () => {
     });
 
     it("reverts when trying to accept an achievement for a profile that the sender does not own", async () => {
-        const { jobStar, profileNft } = await deployJobStar();
+        const { jobStar, mockLensHub }= await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
         const issuer = accounts[1];
-        const profileNftWithWorkerSigner = profileNft.connect(worker);
-        const profileNftWithIssuerSigner = profileNft.connect(issuer);
-        const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+        const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+        const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+        const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
-        const jobStarWithWorkerSigner = jobStar.connect(worker);
         const jobStarWithIssuerSigner = jobStar.connect(issuer);
         const content: AchievementContent = {
             skill: "Solidity",
@@ -210,17 +209,17 @@ describe("JobStar", () => {
         };
         await waitForTx(jobStarWithIssuerSigner.proposeAchievement(content));
 
-        await expect(jobStarWithWorkerSigner.acceptAchievement(1)).to.be.revertedWith(`NotOwnerOfProfile(${profileIds.issuer})`);
+        await expect(jobStarWithIssuerSigner.acceptAchievement(1)).to.be.revertedWith(`NotOwnerOfProfile(${profileIds.worker})`);
     });
 
     it("marks a pending achievement as accepted when accepting it and emits the AchievementAccepted event with the correct arguments", async () => {
-        const { jobStar, profileNft } = await deployJobStar();
+        const { jobStar, mockLensHub }= await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
         const issuer = accounts[1];
-        const profileNftWithWorkerSigner = profileNft.connect(worker);
-        const profileNftWithIssuerSigner = profileNft.connect(issuer);
-        const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+        const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+        const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+        const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
         const jobStarWithWorkerSigner = jobStar.connect(worker);
         const jobStarWithIssuerSigner = jobStar.connect(issuer);
@@ -249,13 +248,13 @@ describe("JobStar", () => {
 
     [0, 1, 2].forEach(expectedAchievements => {
         it(`[${expectedAchievements}] returns the number of achievements when calling getAchievementsCount`, async () => {
-            const { jobStar, profileNft } = await deployJobStar();
+            const { jobStar, mockLensHub }= await deployJobStar();
             const accounts = await ethers.getSigners();
             const worker = accounts[0];
             const issuer = accounts[1];
-            const profileNftWithWorkerSigner = profileNft.connect(worker);
-            const profileNftWithIssuerSigner = profileNft.connect(issuer);
-            const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+            const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+            const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+            const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
             const jobStarWithWorkerSigner = jobStar.connect(worker);
             const jobStarWithIssuerSigner = jobStar.connect(issuer);
@@ -281,13 +280,13 @@ describe("JobStar", () => {
     });
 
     it(`does not count the pending achievements when calling getAchievementsCount`, async () => {
-        const { jobStar, profileNft } = await deployJobStar();
+        const { jobStar, mockLensHub }= await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
         const issuer = accounts[1];
-        const profileNftWithWorkerSigner = profileNft.connect(worker);
-        const profileNftWithIssuerSigner = profileNft.connect(issuer);
-        const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+        const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+        const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+        const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
         const jobStarWithWorkerSigner = jobStar.connect(worker);
         const jobStarWithIssuerSigner = jobStar.connect(issuer);
@@ -309,13 +308,13 @@ describe("JobStar", () => {
     });
 
     it("reverts when trying to accept an achievement for a profile that the sender does not own", async () => {
-        const { jobStar, profileNft } = await deployJobStar();
+        const { jobStar, mockLensHub }= await deployJobStar();
         const accounts = await ethers.getSigners();
         const worker = accounts[0];
         const issuer = accounts[1];
-        const profileNftWithWorkerSigner = profileNft.connect(worker);
-        const profileNftWithIssuerSigner = profileNft.connect(issuer);
-        const profileIds = await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
+        const mockLensHubWithWorkerSigner = mockLensHub.connect(worker);
+        const mockLensHubWithIssuerSigner = mockLensHub.connect(issuer);
+        const profileIds = await mintProfiles({ worker: mockLensHubWithWorkerSigner, issuer: mockLensHubWithIssuerSigner });
 
         const jobStarWithWorkerSigner = jobStar.connect(worker);
         const jobStarWithIssuerSigner = jobStar.connect(issuer);

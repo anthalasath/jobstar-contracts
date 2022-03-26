@@ -24,7 +24,7 @@ async function createAchievement(jobStarWithSigners: AccountPair<Contract>, prof
 }
 
 async function main(): Promise<void> {
-    const { jobStar, profileNft } = await deployJobStar();
+    const { jobStar, mockLensHub: profileNft } = await deployJobStar();
     const accounts = await ethers.getSigners();
     const worker = accounts[0];
     const issuer = accounts[1];
