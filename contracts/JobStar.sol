@@ -16,6 +16,7 @@ struct AchievementContent {
     string description;
     uint256 dateOfDelivery;
     string imageUri;
+    string skill;
 }
 
 contract JobStar {
@@ -150,6 +151,7 @@ contract JobStar {
         }
 
         achievement.isAccepted = true;
+        profileSkillsAndAchievements[achievement.content.workerProfileId][achievement.content.skill].push(achievementId);
         emit AchievementAccepted(
             achievement.content.issuerProfileId,
             achievement.content.workerProfileId,

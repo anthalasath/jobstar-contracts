@@ -3,6 +3,16 @@ import { ethers } from "hardhat";
 import { deployJobStar, DeployJobStarResult } from "../scripts/deploy";
 import { getEvent, waitForTx } from "../scripts/utils";
 
+interface AchievementContent {
+    issuerProfileId: number;
+    workerProfileId: number;
+    title: string;
+    description: string;
+    dateOfDelivery: number;
+    imageUri: string;
+    skill: string;
+}
+
 describe("JobStar", () => {
 
     it("Starts with no skills for profiles", async () => {
@@ -85,7 +95,8 @@ describe("JobStar", () => {
         const issuerProfileId = 2;
         const jobStarWithWorkerSigner = jobStar.connect(worker);
 
-        const achievementContent = {
+        const achievementContent: AchievementContent = {
+            skill: "Solidity",
             issuerProfileId,
             workerProfileId,
             title: "best title",
@@ -110,7 +121,8 @@ describe("JobStar", () => {
         const issuerProfileId = 2;
         const jobStarWithIssuerSigner = jobStar.connect(issuer);
 
-        const expectedContent = {
+        const expectedContent: AchievementContent = {
+            skill: "Solidity",
             issuerProfileId,
             workerProfileId,
             title: "best title",
@@ -159,7 +171,8 @@ describe("JobStar", () => {
                     title: "best title",
                     description: "best description",
                     dateOfDelivery: Date.now(),
-                    imageUri: "https://ethereum.org/en/"
+                    imageUri: "https://ethereum.org/en/",
+                    skill: "Solidity"
                 }));
             }
     
@@ -196,7 +209,8 @@ describe("JobStar", () => {
         const issuerProfileId = 2;
         const jobStarWithWorkerSigner = jobStar.connect(worker);
         const jobStarWithIssuerSigner = jobStar.connect(issuer);
-        const content = {
+        const content: AchievementContent = {
+            skill: "Solidity",
             issuerProfileId,
             workerProfileId: issuerProfileId,
             title: "best title",
@@ -222,7 +236,8 @@ describe("JobStar", () => {
         const issuerProfileId = 2;
         const jobStarWithWorkerSigner = jobStar.connect(worker);
         const jobStarWithIssuerSigner = jobStar.connect(issuer);
-        const content = {
+        const content: AchievementContent = {
+            skill: "Solidity",
             issuerProfileId,
             workerProfileId,
             title: "best title",
@@ -244,6 +259,42 @@ describe("JobStar", () => {
         expect(achievement[1]).to.eq(true);
     });
 
+    [0,1,2].forEach(expectedAchievements => {
+        it(`[${expectedAchievements}] returns the number of achievements when calling getAchievementsCount`, async () => {
+            const { jobStar, profileNft } = await deployJobStar();
+            const accounts = await ethers.getSigners();
+            const worker = accounts[0];
+            const issuer = accounts[1];
+            const profileNftWithWorkerSigner = profileNft.connect(worker);
+            const profileNftWithIssuerSigner = profileNft.connect(issuer);
+            await waitForTx(profileNftWithWorkerSigner.mint());
+            await waitForTx(profileNftWithIssuerSigner.mint());
+            const workerProfileId = 1;
+            const issuerProfileId = 2;
+            const jobStarWithWorkerSigner = jobStar.connect(worker);
+            const jobStarWithIssuerSigner = jobStar.connect(issuer);
+            const content: AchievementContent = {
+                skill: "Solidity",
+                issuerProfileId,
+                workerProfileId,
+                title: "best title",
+                description: "best description",
+                dateOfDelivery: Date.now(),
+                imageUri: "https://ethereum.org/en/"
+            };
+
+            for (let i = 0; i < expectedAchievements; i++) {
+                const achievementId = i + 1;
+                await waitForTx(jobStarWithIssuerSigner.proposeAchievement(content));
+                await waitForTx(jobStarWithWorkerSigner.acceptAchievement(achievementId));
+            }
+
+            const achievementsCount = await jobStar.getAchievementsCount(workerProfileId, "Solidity");
+            expect(achievementsCount).to.eq(expectedAchievements);
+        });
+    });
+
+
     it("reverts when trying to accept an achievement for a profile that the sender does not own", async () => {
         const { jobStar, profileNft } = await deployJobStar();
         const accounts = await ethers.getSigners();
@@ -257,7 +308,8 @@ describe("JobStar", () => {
         const issuerProfileId = 2;
         const jobStarWithWorkerSigner = jobStar.connect(worker);
         const jobStarWithIssuerSigner = jobStar.connect(issuer);
-        const content = {
+        const content: AchievementContent = {
+            skill: "Solidity",
             issuerProfileId,
             workerProfileId,
             title: "best title",
