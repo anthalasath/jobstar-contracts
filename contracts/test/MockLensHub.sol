@@ -24,7 +24,7 @@ import "hardhat/console.sol";
         string followNFTURI;
     }
 
-contract MockProfileNft is ERC721 {
+contract MockLensHub is ERC721 {
 
     uint256 lastTokenId;
     mapping (uint256 => ProfileStruct) _profileById;

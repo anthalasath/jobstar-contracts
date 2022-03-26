@@ -10,15 +10,15 @@ export interface DeployJobStarResult {
 }
 
 export async function deployJobStar(): Promise<DeployJobStarResult> {
-    const MockProfileNft = await ethers.getContractFactory("MockProfileNft");
-    const mockProfileNft = await MockProfileNft.deploy();
-    await mockProfileNft.deployed();
+    const MockLensHub = await ethers.getContractFactory("MockLensHub");
+    const mockLensHub = await MockLensHub.deploy();
+    await mockLensHub.deployed();
 
     const JobStar = await ethers.getContractFactory("JobStar");
-    const jobStar = await JobStar.deploy(mockProfileNft.address);
+    const jobStar = await JobStar.deploy(mockLensHub.address);
     await jobStar.deployed();
 
-    return { jobStar, profileNft: mockProfileNft };
+    return { jobStar, profileNft: mockLensHub };
 }
 
 async function main(): Promise<void> {
