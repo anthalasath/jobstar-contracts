@@ -2,18 +2,7 @@ import { expect } from "chai";
 import { BigNumber, BigNumberish, Contract } from "ethers";
 import { ethers } from "hardhat";
 import { deployJobStar, DeployJobStarResult } from "../scripts/deploy";
-import { AccountPair, AchievementContent, getEvent, waitForTx } from "../scripts/utils";
-
-async function mintProfile(mockLensHubWithSigner: Contract, handle: string): Promise<void> {
-    const tx = await mockLensHubWithSigner.mint(handle, "");
-    await tx.wait();
-}
-
-async function mintProfiles(mockLensHubWithSigners: AccountPair<Contract>): Promise<AccountPair<number>> {
-    await mintProfile(mockLensHubWithSigners.worker, "worker");
-    await mintProfile(mockLensHubWithSigners.issuer, "issuer");
-    return { worker: 1, issuer: 2 }
-}
+import { AccountPair, AchievementContent, getEvent, mintProfiles, waitForTx } from "../scripts/utils";
 
 
 describe("JobStar", () => {

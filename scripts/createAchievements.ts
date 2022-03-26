@@ -2,7 +2,7 @@ import "@nomiclabs/hardhat-waffle";
 import { deployJobStar } from "./deploy";
 import { ethers } from "hardhat";
 import { BigNumber, BigNumberish, Contract } from "ethers";
-import { AccountPair, AchievementContent, getEvent, waitForTx } from "./utils";
+import { AccountPair, AchievementContent, getEvent, mintProfiles, waitForTx } from "./utils";
 
 
 async function createAchievement(jobStarWithSigners: AccountPair<Contract>, profileIds: AccountPair<BigNumberish>): Promise<BigNumber> {
@@ -30,19 +30,18 @@ async function main(): Promise<void> {
     const issuer = accounts[1];
     const profileNftWithWorkerSigner = profileNft.connect(worker);
     const profileNftWithIssuerSigner = profileNft.connect(issuer);
-    await waitForTx(profileNftWithWorkerSigner.mint("wrk"));
-    await waitForTx(profileNftWithIssuerSigner.mint());
+    await mintProfiles({ worker: profileNftWithWorkerSigner, issuer: profileNftWithIssuerSigner });
     const jobStarWithWorkerSigner = jobStar.connect(worker);
     const jobStarWithIssuerSigner = jobStar.connect(issuer);
     const workerProfileId = 1;
     const issuerProfileId = 2;
 
-    // for (let i = 0; i < 10; i++) {
-    //     const achvId = await createAchievement(
-    //         { worker: jobStarWithWorkerSigner, issuer: jobStarWithIssuerSigner },
-    //         { worker: workerProfileId, issuer: issuerProfileId });
-    //     console.log(`Created achievement ${achvId}`);
-    // }
+    for (let i = 0; i < 10; i++) {
+        const achvId = await createAchievement(
+            { worker: jobStarWithWorkerSigner, issuer: jobStarWithIssuerSigner },
+            { worker: workerProfileId, issuer: issuerProfileId });
+        console.log(`Created achievement ${achvId}: ${await jobStar.getAchievementById(achvId)}`);
+    }
 }
 
 main()

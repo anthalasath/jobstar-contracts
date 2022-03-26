@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, ContractTransaction } from "ethers";
+import { BigNumber, BigNumberish, Contract, ContractTransaction } from "ethers";
 
 export async function waitForTx(tx: Promise<ContractTransaction>) {
   await (await tx).wait();
@@ -29,4 +29,15 @@ export interface AchievementContent {
 export interface AccountPair<T> {
     worker: T
     issuer: T
+}
+
+async function mintProfile(mockLensHubWithSigner: Contract, handle: string): Promise<void> {
+  const tx = await mockLensHubWithSigner.mint(handle, "");
+  await tx.wait();
+}
+
+export async function mintProfiles(mockLensHubWithSigners: AccountPair<Contract>): Promise<AccountPair<number>> {
+  await mintProfile(mockLensHubWithSigners.worker, "worker");
+  await mintProfile(mockLensHubWithSigners.issuer, "issuer");
+  return { worker: 1, issuer: 2 }
 }
