@@ -138,6 +138,38 @@ describe("JobStar", () => {
         expect(achievement[1]).to.eq(false);
     });
 
+    [0, 1, 2].forEach(expectedPendingAchievements => {
+        it(`[${expectedPendingAchievements}] getPendingAchievementsCount returns the number of pending achievements for a skill`, async () => {
+            const { jobStar, profileNft } = await deployJobStar();
+            const accounts = await ethers.getSigners();
+            const worker = accounts[0];
+            const issuer = accounts[1];
+            const profileNftWithWorkerSigner = profileNft.connect(worker);
+            const profileNftWithIssuerSigner = profileNft.connect(issuer);
+            await waitForTx(profileNftWithWorkerSigner.mint());
+            await waitForTx(profileNftWithIssuerSigner.mint());
+            const workerProfileId = 1;
+            const issuerProfileId = 2;
+            const jobStarWithIssuerSigner = jobStar.connect(issuer);
+
+            for (let i = 0; i < expectedPendingAchievements; i++) {
+                await waitForTx(jobStarWithIssuerSigner.proposeAchievement({
+                    issuerProfileId,
+                    workerProfileId,
+                    title: "best title",
+                    description: "best description",
+                    dateOfDelivery: Date.now(),
+                    imageUri: "https://ethereum.org/en/"
+                }));
+            }
+    
+            const pendingAchievements = await jobStar.getPendingAchievementsCount(workerProfileId);
+            
+            expect(pendingAchievements).to.eq(expectedPendingAchievements);
+        });
+    });
+
+
     it("reverts when trying to accept an achievement that does not exist", async () => {
         const { jobStar, profileNft } = await deployJobStar();
         const accounts = await ethers.getSigners();
