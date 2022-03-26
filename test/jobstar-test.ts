@@ -294,6 +294,35 @@ describe("JobStar", () => {
         });
     });
 
+    it(`does not count the pending achievements when calling getAchievementsCount`, async () => {
+        const { jobStar, profileNft } = await deployJobStar();
+        const accounts = await ethers.getSigners();
+        const worker = accounts[0];
+        const issuer = accounts[1];
+        const profileNftWithWorkerSigner = profileNft.connect(worker);
+        const profileNftWithIssuerSigner = profileNft.connect(issuer);
+        await waitForTx(profileNftWithWorkerSigner.mint());
+        await waitForTx(profileNftWithIssuerSigner.mint());
+        const workerProfileId = 1;
+        const issuerProfileId = 2;
+        const jobStarWithWorkerSigner = jobStar.connect(worker);
+        const jobStarWithIssuerSigner = jobStar.connect(issuer);
+        const content: AchievementContent = {
+            skill: "Solidity",
+            issuerProfileId,
+            workerProfileId,
+            title: "best title",
+            description: "best description",
+            dateOfDelivery: Date.now(),
+            imageUri: "https://ethereum.org/en/"
+        };
+        await waitForTx(jobStarWithIssuerSigner.proposeAchievement(content));
+        await waitForTx(jobStarWithIssuerSigner.proposeAchievement(content));
+        await waitForTx(jobStarWithWorkerSigner.acceptAchievement(1));
+
+        const achievementsCount = await jobStar.getAchievementsCount(workerProfileId, content.skill);
+        expect(achievementsCount).to.eq(1);
+    });
 
     it("reverts when trying to accept an achievement for a profile that the sender does not own", async () => {
         const { jobStar, profileNft } = await deployJobStar();
