@@ -123,14 +123,14 @@ describe("JobStar", () => {
         expect(achievementProposedEvent.args.workerProfileId).to.eq(profileIds.worker);
         const achievement = await jobStar.getAchievementById(expectedAchievementId);
         expect(achievement.id).to.eq(expectedAchievementId);
-        const content = achievement[0];
-        expect(content[0]).to.eq(expectedContent.issuerProfileId);
-        expect(content[1]).to.eq(expectedContent.workerProfileId);
-        expect(content[2]).to.eq(expectedContent.title);
-        expect(content[3]).to.eq(expectedContent.description);
-        expect(content[4]).to.eq(expectedContent.dateOfDelivery);
-        expect(content[5]).to.eq(expectedContent.imageUri);
-        expect(achievement[1]).to.eq(false);
+        const content = achievement.content;
+        expect(content.issuerProfileId).to.eq(expectedContent.issuerProfileId);
+        expect(content.workerProfileId).to.eq(expectedContent.workerProfileId);
+        expect(content.title).to.eq(expectedContent.title);
+        expect(content.description).to.eq(expectedContent.description);
+        expect(content.dateOfDelivery).to.eq(expectedContent.dateOfDelivery);
+        expect(content.imageUri).to.eq(expectedContent.imageUri);
+        expect(achievement.isAccepted).to.eq(false);
     });
 
     [0, 1, 2].forEach(expectedPendingAchievements => {
@@ -233,7 +233,7 @@ describe("JobStar", () => {
         expect(achievementAcceptedEvent.args.workerProfileId).to.eq(profileIds.worker);
         expect(achievementAcceptedEvent.args.achievementId).to.eq(achievementId);
         const achievement = await jobStar.getAchievementById(achievementId);
-        expect(achievement[1]).to.eq(true);
+        expect(achievement.isAccepted).to.eq(true);
     });
 
     [0, 1, 2].forEach(expectedAchievements => {
