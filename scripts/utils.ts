@@ -33,7 +33,8 @@ export interface AccountPair<T> {
 
 async function mintProfile(mockLensHubWithSigner: Contract, handle: string): Promise<void> {
   const tx = await mockLensHubWithSigner.mint(handle, "");
-  await tx.wait();
+  const receipt = await tx.wait();
+  console.log(`Profile minted at ${receipt.transactionHash}`);
 }
 
 export async function mintProfiles(mockLensHubWithSigners: AccountPair<Contract>): Promise<AccountPair<number>> {

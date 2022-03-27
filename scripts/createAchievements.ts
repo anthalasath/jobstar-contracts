@@ -35,12 +35,14 @@ export async function createAchievements(jobStar: Contract, mockLensHub: Contrac
     const workerProfileId = 1;
     const issuerProfileId = 2;
 
+    const achievements = [];
     for (let i = 0; i < 10; i++) {
         const achvId = await createAchievement(
             { worker: jobStarWithWorkerSigner, issuer: jobStarWithIssuerSigner },
             { worker: workerProfileId, issuer: issuerProfileId });
-        console.log(`Created achievement ${achvId}: ${await jobStar.getAchievementById(achvId)}`);
+        achievements.push(achvId);
     }
+    console.log(`Created achievement ${achievements}`);
 }
 
 async function main(): Promise<void> {

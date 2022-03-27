@@ -22,8 +22,8 @@ export async function deployJobStar(): Promise<DeployJobStarResult> {
 }
 
 async function main(): Promise<void> {
-    const { jobStar } = await deployJobStar();
-    console.log(`JobStar deployed at ${jobStar.address}`);
+    const { jobStar, mockLensHub } = await deployJobStar();
+    console.log(`JobStar deployed at ${jobStar.address} - mockLensHub deployed at ${mockLensHub.address}`);
 }
 
 main()
