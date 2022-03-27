@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 struct Achievement {
+    uint256 id;
     AchievementContent content;
     bool isAccepted;
 }
@@ -165,7 +166,7 @@ contract JobStar {
     {
         latestAchievementId++;
         achievementsByIdMinusOne.push(
-            Achievement({content: content, isAccepted: false})
+            Achievement({id: latestAchievementId, content: content, isAccepted: false})
         );
         return latestAchievementId;
     }

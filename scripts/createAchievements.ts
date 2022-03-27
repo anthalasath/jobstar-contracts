@@ -13,7 +13,7 @@ async function createAchievement(jobStarWithSigners: AccountPair<Contract>, prof
         title: "best title",
         description: "best description",
         dateOfDelivery: Date.now(),
-        imageUri: "https://ethereum.org/en/"
+        imageUri: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Ethereum_logo_2014.svg/1257px-Ethereum_logo_2014.svg.png"
     };
 
     const proposeReceipt = await (await jobStarWithSigners.issuer.proposeAchievement(content)).wait();
@@ -23,8 +23,7 @@ async function createAchievement(jobStarWithSigners: AccountPair<Contract>, prof
     return achievementId;
 }
 
-async function main(): Promise<void> {
-    const { jobStar, mockLensHub } = await deployJobStar();
+export async function createAchievements(jobStar: Contract, mockLensHub: Contract): Promise<void> {
     const accounts = await ethers.getSigners();
     const worker = accounts[0];
     const issuer = accounts[1];
@@ -42,6 +41,11 @@ async function main(): Promise<void> {
             { worker: workerProfileId, issuer: issuerProfileId });
         console.log(`Created achievement ${achvId}: ${await jobStar.getAchievementById(achvId)}`);
     }
+}
+
+async function main(): Promise<void> {
+    const { jobStar, mockLensHub } = await deployJobStar();
+    await createAchievements(jobStar, mockLensHub);
 }
 
 main()

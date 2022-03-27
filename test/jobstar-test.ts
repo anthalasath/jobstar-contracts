@@ -122,6 +122,7 @@ describe("JobStar", () => {
         expect(achievementProposedEvent.args.issuerProfileId).to.eq(profileIds.issuer);
         expect(achievementProposedEvent.args.workerProfileId).to.eq(profileIds.worker);
         const achievement = await jobStar.getAchievementById(expectedAchievementId);
+        expect(achievement.id).to.eq(expectedAchievementId);
         const content = achievement[0];
         expect(content[0]).to.eq(expectedContent.issuerProfileId);
         expect(content[1]).to.eq(expectedContent.workerProfileId);
